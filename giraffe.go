@@ -1,6 +1,7 @@
 package giraffe
 
 import (
+	"fmt"
 	"sync"
 	"sync/atomic"
 )
@@ -85,4 +86,63 @@ func (g *Graph) FindNodeByKey(key string) (*Node, bool) {
 	}
 
 	return g.Nodes[id], true
+}
+
+func (g *Graph) ToVisJS() string {
+	dataSet := ""
+	edges := ""
+
+	for id, node := range g.Nodes {
+		dataSet += fmt.Sprintf(`{id: %d, label: '%s'},`, id, node.Key)
+		for _, nID := range node.ListDestinations() {
+			edges += fmt.Sprintf(`{from: %d, to: %d},`, id, nID)
+		}
+	}
+
+	js := `
+<html>
+<head>
+    <script type="text/javascript" src="http://visjs.org/dist/vis.js"></script>
+    <link href="http://visjs.org/dist/vis.css" rel="stylesheet" type="text/css" />
+
+    <style type="text/css">
+        #mynetwork {
+            width: 600px;
+            height: 400px;
+            border: 1px solid lightgray;
+        }
+    </style>
+</head>
+<body>
+<div id="mynetwork"></div>
+
+<script type="text/javascript">
+    // create an array with nodes
+    var nodes = new vis.DataSet([
+        ` + dataSet + `
+    ]);
+
+    // create an array with edges
+    var edges = new vis.DataSet([
+        ` + edges + `
+    ]);
+
+    // create a network
+    var container = document.getElementById('mynetwork');
+
+    // provide the data in the vis format
+    var data = {
+        nodes: nodes,
+        edges: edges
+    };
+    var options = {};
+
+    // initialize your network!
+    var network = new vis.Network(container, data, options);
+</script>
+</body>
+</html>
+    `
+
+	return js
 }
