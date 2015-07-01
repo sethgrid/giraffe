@@ -127,12 +127,23 @@ func (g *Graph) FindNodeByKey(key string) (*Node, bool) {
 
 // ToVisJS generates a simple HTML/Javascript view of the data
 // See http://visjs.org/ for information and styles
-func (g *Graph) ToVisJS() string {
+func (g *Graph) ToVisJS(showID, showKey, showValue bool) string {
 	dataSet := ""
 	edges := ""
 
 	for id, node := range g.Nodes {
-		dataSet += fmt.Sprintf(`{id: %d, label: 'node %d'},`, id, id)
+		label := ""
+		if showID {
+			label += fmt.Sprintf("node %d ", id)
+		}
+		if showKey {
+			label += fmt.Sprintf("%s ", node.Key)
+		}
+		if showValue {
+			label += fmt.Sprintf("%s ", string(node.Value))
+		}
+
+		dataSet += fmt.Sprintf(`{id: %d, label: '%s'},`, id, label)
 		for _, nID := range node.ListDestinations() {
 			edges += fmt.Sprintf(`{from: %d, to: %d, arrows:'middle',},`, id, nID)
 		}
