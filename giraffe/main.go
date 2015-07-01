@@ -2,26 +2,46 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"math/rand"
+	"time"
 
 	"github.com/sethgrid/giraffe"
 )
 
+func init() {
+	rand.Seed(time.Now().Unix())
+}
+
 func main() {
+	// make a new graph
 	g, _ := giraffe.NewGraph("example")
 
+	// we automatically have access to the root node
 	root := g.Nodes[0]
-	n1 := g.InsertDataNode("node 1", []byte("data"))
-	n2 := g.InsertDataNode("node 2", []byte("data"))
-	n3 := g.InsertDataNode("node 3", []byte("data"))
-	n4 := g.InsertDataNode("node 4", []byte("data"))
-	n5 := g.InsertDataNode("node 5", []byte("data"))
 
-	root.AddRelationship(n1)
-	root.AddRelationship(n2)
-	root.AddRelationship(n3)
-	n3.AddRelationship(n4)
-	n4.AddRelationship(n5)
-	n5.AddRelationship(n3)
+	// let's make a bunch of new nodes
+	nodeCount := 50
+	nodes := make([]*giraffe.Node, nodeCount)
+	nodes[0] = root
+	for i := 1; i < nodeCount; i++ {
+		nodes[i] = g.InsertDataNode(fmt.Sprintf("node %d", i), []byte{})
+	}
 
+	// let's make random relationships between the nodes
+	for i := 0; i < nodeCount*1; i++ {
+		nodeA := int(rand.Intn(nodeCount - 1))
+		nodeB := int(rand.Intn(nodeCount - 1))
+		if nodeA == nodeB {
+			nodeA = 0
+		}
+
+		nodes[nodeA].AddRelationship(nodes[nodeB])
+	}
+
+	// and we can now visualize the relationships
 	fmt.Println(g.ToVisJS())
+
+	// while we started with one root node, we can have many roots
+	log.Println("root nodes: ", g.FindRoots())
 }

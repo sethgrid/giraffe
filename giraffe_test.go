@@ -16,16 +16,18 @@ func TestRootNodeCreate(t *testing.T) {
 	}
 }
 
-func TestAddNewNodes(t *testing.T) {
+func TestAddNewNodesWithDestinationsAndSources(t *testing.T) {
 	g, _ := NewGraph("testGraph")
 	n1 := g.InsertNode()
 	n2 := g.InsertNode()
 	n3 := g.InsertNode()
+	n4 := g.InsertNode()
 
 	root := g.Nodes[0]
 	root.AddRelationship(n1)
 	root.AddRelationship(n2)
 	n2.AddRelationship(n3)
+	n4.AddRelationship(n3)
 
 	destinations := root.ListDestinations()
 
@@ -35,6 +37,16 @@ func TestAddNewNodes(t *testing.T) {
 
 	if want := []uint64{n1.ID, n2.ID}; !ContainsAll(destinations, want) {
 		t.Errorf("actual destinations %v not expected %v", destinations, want)
+	}
+
+	sources := n3.ListSources()
+
+	if len(sources) != 2 {
+		t.Errorf("got %d, want %d destination nodes", len(sources), 2)
+	}
+
+	if want := []uint64{n2.ID, n4.ID}; !ContainsAll(sources, want) {
+		t.Errorf("actual sources %v not expected %v", sources, want)
 	}
 
 }
@@ -65,9 +77,9 @@ func TestFindRoots(t *testing.T) {
 
 func TestAddNewDataNodesAndFindNode(t *testing.T) {
 	g, _ := NewGraph("testGraph")
-	n1 := g.InsertDataNode("key1", []byte("value1"))
-	n2 := g.InsertDataNode("key2", []byte("value2"))
-	n3 := g.InsertDataNode("key3", []byte("value3"))
+	n1, _ := g.InsertDataNode("key1", []byte("value1"))
+	n2, _ := g.InsertDataNode("key2", []byte("value2"))
+	n3, _ := g.InsertDataNode("key3", []byte("value3"))
 
 	root := g.Nodes[0]
 	root.AddRelationship(n1)
@@ -91,6 +103,24 @@ func TestAddNewDataNodesAndFindNode(t *testing.T) {
 
 	if string(foundNode.Value) != "value3" {
 		t.Errorf("got `%s`, want `value3` data", foundNode.Value)
+	}
+}
+
+func TestDuplicateKeyError(t *testing.T) {
+	g, _ := NewConstraintGraph("testGraph", false, true)
+
+	_, err := g.InsertDataNode("key", []byte("data"))
+	if err != nil {
+		t.Errorf("expected no error, got `%s`", err)
+	}
+
+	_, err = g.InsertDataNode("key", []byte("oops, same key"))
+	if err == nil {
+		t.Error("no error when there should have been")
+	}
+
+	if err.Error() != ErrKeyExists {
+		t.Errorf("unexpected error message. got `%s`, want `%s`", err.Error(), ErrKeyExists)
 	}
 }
 

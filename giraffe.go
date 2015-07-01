@@ -1,21 +1,44 @@
 package giraffe
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 	"sync/atomic"
 )
 
+const (
+	ErrKeyExists = "key exists"
+)
+
+// Graph is a data structure composed of Nodes that have directional relationships to one another
 type Graph struct {
+	Name string
+
+	duplicateKeys        bool
+	circularRelationship bool
+
 	sync.Mutex
 	Nodes map[uint64]*Node
+	keys  map[string]bool
 
 	topNodeID uint64
 }
 
+// NewGraph creates a graph with default properties
 func NewGraph(name string) (*Graph, error) {
+	return NewConstraintGraph(name, true, true)
+}
+
+// NewConstraintGraph allows you to control if duplicate keys or circular relationships can exist
+// TODO: implement circular relationship check
+func NewConstraintGraph(name string, duplicateKeys, circularRelationship bool) (*Graph, error) {
 	g := &Graph{
-		Nodes: make(map[uint64]*Node),
+		Name:                 name,
+		Nodes:                make(map[uint64]*Node),
+		keys:                 make(map[string]bool),
+		duplicateKeys:        duplicateKeys,
+		circularRelationship: circularRelationship,
 	}
 	// insert root node
 	g.Nodes[0] = &Node{ID: 0}
@@ -23,18 +46,21 @@ func NewGraph(name string) (*Graph, error) {
 	return g, nil
 }
 
+// NodeCount returns the number of nodes in the graph
 func (g *Graph) NodeCount() int {
 	g.Lock()
 	defer g.Unlock()
 	return len(g.Nodes)
 }
 
+// LastNodeID returns the id of the last inserted node
 func (g *Graph) LastNodeID() uint64 {
 	g.Lock()
 	g.Unlock()
 	return g.topNodeID
 }
 
+// InsertNode inserts an empty default node into the graph. See InsertDataNode().
 func (g *Graph) InsertNode() *Node {
 	g.Lock()
 	g.Unlock()
@@ -48,13 +74,22 @@ func (g *Graph) InsertNode() *Node {
 	return n
 }
 
-func (g *Graph) InsertDataNode(key string, value []byte) *Node {
+// InsertDataNode is an alternate constructor to InsertNode() allowing you to pass in a key and value
+func (g *Graph) InsertDataNode(key string, value []byte) (*Node, error) {
+	if !g.duplicateKeys {
+		if _, ok := g.keys[key]; ok {
+			return nil, errors.New(ErrKeyExists)
+		}
+		g.keys[key] = true
+	}
+
 	n := g.InsertNode()
 	n.Key = key
 	n.Value = value
-	return n
+	return n, nil
 }
 
+// FindRoots finds all nodes that do not have a source nodes below them
 func (g *Graph) FindRoots() []uint64 {
 	g.Lock()
 	defer g.Unlock()
@@ -69,6 +104,7 @@ func (g *Graph) FindRoots() []uint64 {
 	return roots
 }
 
+// FindNodeIDByKey returns the first node's ID with a matching key
 func (g *Graph) FindNodeIDByKey(key string) (uint64, bool) {
 	for id, node := range g.Nodes {
 		if node.Key == key {
@@ -79,6 +115,7 @@ func (g *Graph) FindNodeIDByKey(key string) (uint64, bool) {
 	return 0, false
 }
 
+// FindNodeByKey returns the the first node with a matching key
 func (g *Graph) FindNodeByKey(key string) (*Node, bool) {
 	id, found := g.FindNodeIDByKey(key)
 	if !found {
@@ -88,14 +125,16 @@ func (g *Graph) FindNodeByKey(key string) (*Node, bool) {
 	return g.Nodes[id], true
 }
 
+// ToVisJS generates a simple HTML/Javascript view of the data
+// See http://visjs.org/ for information and styles
 func (g *Graph) ToVisJS() string {
 	dataSet := ""
 	edges := ""
 
 	for id, node := range g.Nodes {
-		dataSet += fmt.Sprintf(`{id: %d, label: '%s'},`, id, node.Key)
+		dataSet += fmt.Sprintf(`{id: %d, label: 'node %d'},`, id, id)
 		for _, nID := range node.ListDestinations() {
-			edges += fmt.Sprintf(`{from: %d, to: %d},`, id, nID)
+			edges += fmt.Sprintf(`{from: %d, to: %d, arrows:'middle',},`, id, nID)
 		}
 	}
 
