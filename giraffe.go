@@ -8,6 +8,7 @@ import (
 )
 
 const (
+	// ErrKeyExists returns as the error value when an operation would cause a key collision
 	ErrKeyExists = "key exists"
 )
 
@@ -65,17 +66,16 @@ func (g *Graph) InsertNode() *Node {
 	g.Lock()
 	g.Unlock()
 
-	n := &Node{
-		ID: atomic.AddUint64(&g.topNodeID, 1),
-	}
-
-	g.Nodes[n.ID] = n
+	n := g.insertNode()
 
 	return n
 }
 
 // InsertDataNode is an alternate constructor to InsertNode() allowing you to pass in a key and value
 func (g *Graph) InsertDataNode(key string, value []byte) (*Node, error) {
+	g.Lock()
+	g.Unlock()
+
 	if !g.duplicateKeys {
 		if _, ok := g.keys[key]; ok {
 			return nil, errors.New(ErrKeyExists)
@@ -83,10 +83,22 @@ func (g *Graph) InsertDataNode(key string, value []byte) (*Node, error) {
 		g.keys[key] = true
 	}
 
-	n := g.InsertNode()
+	n := g.insertNode()
+
 	n.Key = key
 	n.Value = value
 	return n, nil
+}
+
+// insertNode contains shared logic for the insert node calls
+func (g *Graph) insertNode() *Node {
+	n := &Node{
+		ID: atomic.AddUint64(&g.topNodeID, 1),
+	}
+
+	g.Nodes[n.ID] = n
+
+	return n
 }
 
 // FindRoots finds all nodes that do not have a source nodes below them
