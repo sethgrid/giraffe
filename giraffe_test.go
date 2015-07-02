@@ -23,13 +23,12 @@ func TestAddNewNodesWithDestinationsAndSources(t *testing.T) {
 	n3 := g.InsertNode()
 	n4 := g.InsertNode()
 
-	root := g.Nodes[0]
-	root.AddRelationship(n1)
-	root.AddRelationship(n2)
+	g.Root().AddRelationship(n1)
+	g.Root().AddRelationship(n2)
 	n2.AddRelationship(n3)
 	n4.AddRelationship(n3)
 
-	destinations := root.ListDestinations()
+	destinations := extractIDs(g.Root().ListDestinations())
 
 	if len(destinations) != 2 {
 		t.Errorf("got %d, want %d destination nodes", len(destinations), 2)
@@ -39,7 +38,7 @@ func TestAddNewNodesWithDestinationsAndSources(t *testing.T) {
 		t.Errorf("actual destinations %v not expected %v", destinations, want)
 	}
 
-	sources := n3.ListSources()
+	sources := extractIDs(n3.ListSources())
 
 	if len(sources) != 2 {
 		t.Errorf("got %d, want %d destination nodes", len(sources), 2)
@@ -58,13 +57,12 @@ func TestFindRoots(t *testing.T) {
 	n3 := g.InsertNode()
 	n4 := g.InsertNode()
 
-	root := g.Nodes[0]
-	root.AddRelationship(n1)
-	root.AddRelationship(n2)
+	g.Root().AddRelationship(n1)
+	g.Root().AddRelationship(n2)
 	n2.AddRelationship(n3)
 
 	roots := g.FindRoots()
-	expectedRoots := []uint64{root.ID, n4.ID}
+	expectedRoots := []uint64{g.Root().ID, n4.ID}
 
 	if len(roots) != len(expectedRoots) {
 		t.Errorf("got %d roots, wat %d roots", len(roots), len(expectedRoots))
@@ -81,12 +79,11 @@ func TestAddNewDataNodesAndFindNode(t *testing.T) {
 	n2, _ := g.InsertDataNode("key2", []byte("value2"))
 	n3, _ := g.InsertDataNode("key3", []byte("value3"))
 
-	root := g.Nodes[0]
-	root.AddRelationship(n1)
-	root.AddRelationship(n2)
+	g.Root().AddRelationship(n1)
+	g.Root().AddRelationship(n2)
 	n2.AddRelationship(n3)
 
-	destinations := root.ListDestinations()
+	destinations := extractIDs(g.Root().ListDestinations())
 
 	if len(destinations) != 2 {
 		t.Errorf("got %d, want %d destination nodes", len(destinations), 2)
@@ -121,6 +118,90 @@ func TestDuplicateKeyError(t *testing.T) {
 
 	if err.Error() != ErrKeyExists {
 		t.Errorf("unexpected error message. got `%s`, want `%s`", err.Error(), ErrKeyExists)
+	}
+}
+
+func TestCircularRelationship(t *testing.T) {
+	g, _ := NewConstraintGraph("testGraph", false, false)
+	n1 := g.InsertNode()
+	n2 := g.InsertNode()
+	n3 := g.InsertNode()
+
+	var err error
+
+	err = g.Root().AddRelationship(n1)
+	if err != nil {
+		t.Error("should not error adding relationship")
+	}
+	err = n1.AddRelationship(n2)
+	if err != nil {
+		t.Error("should not error adding relationship")
+	}
+	err = n2.AddRelationship(n3)
+	if err != nil {
+		t.Error("should not error adding relationship")
+	}
+	err = n3.AddRelationship(g.Root())
+	if err == nil {
+		t.Error("should error adding circular relationship")
+	}
+}
+
+func TestSearch(t *testing.T) {
+	g, _ := NewGraph("testGraph")
+	n1 := g.InsertNode()
+	n2 := g.InsertNode()
+	n3 := g.InsertNode()
+	n4 := g.InsertNode()
+	n5 := g.InsertNode()
+	n6 := g.InsertNode()
+	n7 := g.InsertNode()
+	n8 := g.InsertNode()
+	n9 := g.InsertNode()
+	n10 := g.InsertNode()
+	n11 := g.InsertNode()
+	n12 := g.insertNode() // stranded
+
+	root := g.Nodes[0]
+	root.AddRelationship(n1)
+	root.AddRelationship(n2)
+	root.AddRelationship(n3)
+	n1.AddRelationship(n4)
+	n2.AddRelationship(n5)
+	n2.AddRelationship(n6)
+	n3.AddRelationship(n7)
+	n5.AddRelationship(n8)
+	n6.AddRelationship(n9)
+	n6.AddRelationship(n10)
+	n10.AddRelationship(n11)
+
+	/*
+	   above makes the following tree
+	                0
+	              / | \
+	             1  2  3
+	            /  / \  \
+	           4  5   6  7
+	             /   / \
+	            8   9   10
+	                     \
+	                      11
+	*/
+
+	if !root.DepthFirstSearch(n11) {
+		t.Error("unable to find path root -> n11")
+	}
+
+	if root.DepthFirstSearch(n12) {
+		t.Error("should not find a path root -> n12")
+	}
+
+	if !root.BreadthFirstSearch(n9) {
+		t.Error("unable to find path root -> n9")
+	}
+
+	if root.BreadthFirstSearch(n12) {
+		t.Error("should not find a path root -> n12")
 	}
 }
 

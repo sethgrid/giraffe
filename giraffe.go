@@ -32,7 +32,6 @@ func NewGraph(name string) (*Graph, error) {
 }
 
 // NewConstraintGraph allows you to control if duplicate keys or circular relationships can exist
-// TODO: implement circular relationship check
 func NewConstraintGraph(name string, duplicateKeys, circularRelationship bool) (*Graph, error) {
 	g := &Graph{
 		Name:                 name,
@@ -45,6 +44,11 @@ func NewConstraintGraph(name string, duplicateKeys, circularRelationship bool) (
 	g.Nodes[0] = &Node{ID: 0}
 
 	return g, nil
+}
+
+// Root is a simple accessor function to get to the initial root node
+func (g *Graph) Root() *Node {
+	return g.Nodes[0]
 }
 
 // NodeCount returns the number of nodes in the graph
@@ -93,7 +97,8 @@ func (g *Graph) InsertDataNode(key string, value []byte) (*Node, error) {
 // insertNode contains shared logic for the insert node calls
 func (g *Graph) insertNode() *Node {
 	n := &Node{
-		ID: atomic.AddUint64(&g.topNodeID, 1),
+		ID:                   atomic.AddUint64(&g.topNodeID, 1),
+		circularRelationship: g.circularRelationship,
 	}
 
 	g.Nodes[n.ID] = n
@@ -156,7 +161,7 @@ func (g *Graph) ToVisJS(showID, showKey, showValue bool) string {
 		}
 
 		dataSet += fmt.Sprintf(`{id: %d, label: '%s'},`, id, label)
-		for _, nID := range node.ListDestinations() {
+		for _, nID := range extractIDs(node.ListDestinations()) {
 			edges += fmt.Sprintf(`{from: %d, to: %d, arrows:'middle',},`, id, nID)
 		}
 	}
