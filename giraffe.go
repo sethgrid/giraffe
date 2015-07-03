@@ -106,6 +106,36 @@ func (g *Graph) insertNode() *Node {
 	return n
 }
 
+func (g *Graph) DeleteNode(node *Node) error {
+	g.Lock()
+	defer g.Unlock()
+
+	return g.deleteNodeByID(node.ID)
+}
+
+func (g *Graph) DeleteNodeByID(ID uint64) error {
+	g.Lock()
+	defer g.Unlock()
+
+	return g.deleteNodeByID(ID)
+}
+
+func (g *Graph) deleteNodeByID(ID uint64) error {
+	sourceIDs := extractIDs(g.Nodes[ID].sources)
+	destinationIDs := extractIDs(g.Nodes[ID].destinations)
+
+	for _, nodeID := range sourceIDs {
+		g.Nodes[nodeID].RemoveRelationship(g.Nodes[ID])
+	}
+	for _, nodeID := range destinationIDs {
+		g.Nodes[ID].RemoveRelationship(g.Nodes[nodeID])
+	}
+
+	delete(g.Nodes, ID)
+
+	return nil
+}
+
 // FindRoots finds all nodes that do not have a source nodes below them
 func (g *Graph) FindRoots() []uint64 {
 	g.Lock()

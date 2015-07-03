@@ -48,6 +48,31 @@ func (n *Node) addSource(newNode *Node) {
 	n.sources = append(n.sources, newNode)
 }
 
+func (n *Node) RemoveRelationship(oldNode *Node) error {
+	n.Lock()
+	defer n.Unlock()
+
+	// while typical use would dictate that any node would only have one
+	// relationship to another node, we cannot be sure. remove all relationships.
+	var removeSources []*Node
+	for _, n := range n.sources {
+		if n.ID == oldNode.ID {
+			removeSources = append(removeSources, n)
+		}
+	}
+	var removeDestinations []*Node
+	for _, n := range n.destinations {
+		if n.ID == oldNode.ID {
+			removeDestinations = append(removeDestinations, n)
+		}
+	}
+
+	n.sources = difference(n.sources, removeSources)
+	n.destinations = difference(n.destinations, removeDestinations)
+
+	return nil
+}
+
 // ListDestinations lists all nodes that this node points towards
 func (n *Node) ListDestinations() []*Node {
 	n.Lock()
@@ -107,4 +132,25 @@ func extractIDs(nodes []*Node) []uint64 {
 		IDs[i] = node.ID
 	}
 	return IDs
+}
+
+// difference returns the result of removing subtrahend elements from the minuend
+func difference(minuend, subtrahend []*Node) []*Node {
+	var difference []*Node
+	for _, m := range minuend {
+		if !inList(subtrahend, m) {
+			difference = append(difference, m)
+		}
+	}
+	return difference
+}
+
+// inList returns true if the target node is in the node list
+func inList(list []*Node, target *Node) bool {
+	for _, node := range list {
+		if node.ID == target.ID {
+			return true
+		}
+	}
+	return false
 }

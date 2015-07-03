@@ -148,7 +148,83 @@ func TestCircularRelationship(t *testing.T) {
 }
 
 func TestSearch(t *testing.T) {
-	g, _ := NewGraph("testGraph")
+	g, _ := newTestGraph()
+
+	if !g.Root().DepthFirstSearch(g.Nodes[11]) {
+		t.Error("unable to find path root -> n11")
+	}
+
+	if g.Root().DepthFirstSearch(g.Nodes[12]) {
+		t.Error("should not find a path root -> n12")
+	}
+
+	if !g.Root().BreadthFirstSearch(g.Nodes[9]) {
+		t.Error("unable to find path root -> n9")
+	}
+
+	if g.Root().BreadthFirstSearch(g.Nodes[12]) {
+		t.Error("should not find a path root -> n12")
+	}
+}
+
+func TestRemoveRelationship(t *testing.T) {
+	g, _ := newTestGraph()
+
+	// cause nodes 9 and 10 (and 11) to be cut off (because 2 does not touch 6)
+	err := g.Nodes[2].RemoveRelationship(g.Nodes[6])
+	if err != nil {
+		t.Fatalf("RemoveRelationship should not error, got `%v`", err)
+	}
+
+	for i := uint64(9); i <= 11; i++ {
+		if g.Nodes[2].DepthFirstSearch(g.Nodes[i]) {
+			t.Errorf("found node %d but should not have", i)
+		}
+	}
+}
+
+func TestDeleteNode(t *testing.T) {
+	g, _ := newTestGraph()
+
+	// cause nodes 9 and 10 (and 11) to be cut off (because 6 is gone)
+	err := g.DeleteNode(g.Nodes[6])
+	if err != nil {
+		t.Fatalf("RemoveRelationship should not error, got `%v`", err)
+	}
+
+	for i := uint64(9); i <= 11; i++ {
+		if g.Nodes[2].DepthFirstSearch(g.Nodes[i]) {
+			t.Errorf("found node %d but should not have", i)
+		}
+	}
+
+	if _, ok := g.Nodes[6]; ok {
+		t.Error("node 6 found but should be deleted")
+	}
+}
+
+func TestDeleteNodeByID(t *testing.T) {
+	g, _ := newTestGraph()
+
+	// cause nodes 9 and 10 (and 11) to be cut off (because 6 is gone)
+	err := g.DeleteNodeByID(6)
+	if err != nil {
+		t.Fatalf("RemoveRelationship should not error, got `%v`", err)
+	}
+
+	for i := uint64(9); i <= 11; i++ {
+		if g.Nodes[2].DepthFirstSearch(g.Nodes[i]) {
+			t.Errorf("found node %d but should not have", i)
+		}
+	}
+
+	if _, ok := g.Nodes[6]; ok {
+		t.Error("node 6 found but should be deleted")
+	}
+}
+
+func newTestGraph() (*Graph, error) {
+	g, err := NewGraph("testGraph")
 	n1 := g.InsertNode()
 	n2 := g.InsertNode()
 	n3 := g.InsertNode()
@@ -161,11 +237,11 @@ func TestSearch(t *testing.T) {
 	n10 := g.InsertNode()
 	n11 := g.InsertNode()
 	n12 := g.insertNode() // stranded
+	_ = n12               // do nothing with it
 
-	root := g.Nodes[0]
-	root.AddRelationship(n1)
-	root.AddRelationship(n2)
-	root.AddRelationship(n3)
+	g.Root().AddRelationship(n1)
+	g.Root().AddRelationship(n2)
+	g.Root().AddRelationship(n3)
 	n1.AddRelationship(n4)
 	n2.AddRelationship(n5)
 	n2.AddRelationship(n6)
@@ -176,33 +252,18 @@ func TestSearch(t *testing.T) {
 	n10.AddRelationship(n11)
 
 	/*
-	   above makes the following tree
-	                0
-	              / | \
-	             1  2  3
-	            /  / \  \
-	           4  5   6  7
-	             /   / \
-	            8   9   10
-	                     \
-	                      11
+		above makes the following tree
+		             0        12 (stranded)
+		           / | \
+		          1  2  3
+		         /  / \  \
+		        4  5   6  7
+		          /   / \
+		         8   9   10
+		                  \
+		                   11
 	*/
-
-	if !root.DepthFirstSearch(n11) {
-		t.Error("unable to find path root -> n11")
-	}
-
-	if root.DepthFirstSearch(n12) {
-		t.Error("should not find a path root -> n12")
-	}
-
-	if !root.BreadthFirstSearch(n9) {
-		t.Error("unable to find path root -> n9")
-	}
-
-	if root.BreadthFirstSearch(n12) {
-		t.Error("should not find a path root -> n12")
-	}
+	return g, err
 }
 
 func ContainsAll(superset, subset []uint64) bool {
