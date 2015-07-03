@@ -7,9 +7,13 @@ import (
 	"sync/atomic"
 )
 
+// Error constants
 const (
 	// ErrKeyExists returns as the error value when an operation would cause a key collision
 	ErrKeyExists = "key exists"
+
+	// ErrCircular returns when adding a node relationship would result in a circular relationship
+	ErrCircular = "circular relationship"
 )
 
 // Graph is a data structure composed of Nodes that have directional relationships to one another

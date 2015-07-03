@@ -5,11 +5,6 @@ import (
 	"sync"
 )
 
-const (
-	// ErrCircular returns when adding a relationship would result in a circular relationship
-	ErrCircular = "circular relationship"
-)
-
 // Node is a key value pair that has directional relationships with other Nodes
 type Node struct {
 	ID    uint64
