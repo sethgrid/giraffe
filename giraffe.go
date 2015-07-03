@@ -144,7 +144,7 @@ func (g *Graph) deleteNodeByID(ID uint64) error {
 func (g *Graph) FindRoots() []uint64 {
 	g.Lock()
 	defer g.Unlock()
-	roots := make([]uint64, 0)
+	var roots []uint64
 	for _, node := range g.Nodes {
 		node.Lock()
 		if len(node.sources) == 0 {
