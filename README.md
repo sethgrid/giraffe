@@ -1,4 +1,6 @@
-# giraffe
+<img align="left" src="giraffe/giraffe.png">
+#&nbsp;giraffe
+
 Giraffe is an in-memory directional graph and key value store. Giraffe is a work in progress. I want to add the ability to persist and load graphs, to later make giraffe an actual datastore with an exposed tcp or rest api, and eventually make it distributed.
 
 You can check out the full documentation on [godoc.org](https://godoc.org/github.com/sethgrid/giraffe)
@@ -12,5 +14,3 @@ The current API supports:
 - searching nodes
 - creating an HTML/Javascript view of the graph leveraging visjs.org
 - safe to use concurrently
-
-![](/giraffe/giraffe.png)
