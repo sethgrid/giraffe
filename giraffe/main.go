@@ -21,7 +21,7 @@ func main() {
 func curriculumGraph() {
 	g, _ := giraffe.NewConstraintGraph("math curriculum", true, true)
 
-	root := g.Nodes[0]
+	root := g.Root() // same as g.Nodes[0]
 
 	// this will be the entry point into the curriculum
 	// Keys will be lesson titles, Values will be a foreign key into a relational DB (or something)
@@ -66,7 +66,7 @@ func randomGraph() {
 	g, _ := giraffe.NewGraph("example")
 
 	// we automatically have access to the root node
-	root := g.Nodes[0]
+	root := g.Root() // same as g.Nodes[0]
 
 	// let's make a bunch of new nodes
 	nodeCount := 50
