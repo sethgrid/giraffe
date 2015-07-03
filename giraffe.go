@@ -110,6 +110,7 @@ func (g *Graph) insertNode() *Node {
 	return n
 }
 
+// DeleteNode removes a node and its relationships from the graph
 func (g *Graph) DeleteNode(node *Node) error {
 	g.Lock()
 	defer g.Unlock()
@@ -117,6 +118,7 @@ func (g *Graph) DeleteNode(node *Node) error {
 	return g.deleteNodeByID(node.ID)
 }
 
+// DeleteNodeByID removes a node (by its ID) and its relationships from the graph
 func (g *Graph) DeleteNodeByID(ID uint64) error {
 	g.Lock()
 	defer g.Unlock()
@@ -124,6 +126,7 @@ func (g *Graph) DeleteNodeByID(ID uint64) error {
 	return g.deleteNodeByID(ID)
 }
 
+// deleteNodeByID is a helper function to keep logic DRY in the delete node endpoints
 func (g *Graph) deleteNodeByID(ID uint64) error {
 	sourceIDs := extractIDs(g.Nodes[ID].sources)
 	destinationIDs := extractIDs(g.Nodes[ID].destinations)

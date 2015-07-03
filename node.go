@@ -43,6 +43,7 @@ func (n *Node) addSource(newNode *Node) {
 	n.sources = append(n.sources, newNode)
 }
 
+// RemoveRelationship removes the edge/relationship between a source node and its destination node
 func (n *Node) RemoveRelationship(oldNode *Node) error {
 	n.Lock()
 	defer n.Unlock()
@@ -106,7 +107,7 @@ func bfs(otherNode *Node, queue []*Node) bool {
 		return false
 	}
 
-	nextQueue := make([]*Node, 0)
+	var nextQueue []*Node
 	for _, node := range queue {
 		if node.ID == otherNode.ID {
 			return true
