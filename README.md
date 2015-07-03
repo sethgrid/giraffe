@@ -12,3 +12,5 @@ The current API supports:
 - searching nodes
 - creating an HTML/Javascript view of the graph leveraging visjs.org
 - safe to use concurrently
+
+![](/giraffe/giraffe.png)
