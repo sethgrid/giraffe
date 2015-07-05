@@ -16,6 +16,9 @@ type Node struct {
 	sync.RWMutex
 	destinations []*Node
 	sources      []*Node
+
+	// used for encoding/decoding
+	sourceIDs []uint64
 }
 
 // AddRelationship adds a newNode as a destination of this node
