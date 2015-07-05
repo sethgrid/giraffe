@@ -18,7 +18,7 @@ The current API supports:
 
 # Full Example
 
-```
+```go
 package main
 
 import (
@@ -82,3 +82,6 @@ func main() {
     fmt.Println(restoredGraph.ToVisJS(false, true, false))
 }
 ```
+
+The above code would create a backup file of the graph and an html output of a VisJS interactive graph similar to the image below (note: the graph is an example and not necessarily a real model of knowledge scaffolding). 
+![graph example](giraffe/graph.png)
