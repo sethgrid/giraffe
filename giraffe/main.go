@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"time"
@@ -57,8 +58,16 @@ func curriculumGraph() {
 	root.AddRelationship(POLY)
 	root.AddRelationship(SUB)
 
+	// save
+	data, _ := g.GobEncode()
+	ioutil.WriteFile("someFile", data, 0766)
+
+	// load
+	restoredGraph := &giraffe.Graph{}
+	restoredGraph.GobDecode(data)
+
 	// visualize
-	fmt.Println(g.ToVisJS(false, true, false))
+	fmt.Println(restoredGraph.ToVisJS(false, true, false))
 }
 
 func randomGraph() {
