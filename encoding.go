@@ -6,6 +6,7 @@ import (
 	"errors"
 )
 
+// GobEncode satisfies the gob encoder interface
 func (g *Graph) GobEncode() ([]byte, error) {
 	g.Lock()
 	defer g.Unlock()
@@ -39,6 +40,7 @@ func (g *Graph) GobEncode() ([]byte, error) {
 	return w.Bytes(), nil
 }
 
+// GobDecode satisfies the gob encoder interface
 func (g *Graph) GobDecode(buf []byte) error {
 	r := bytes.NewBuffer(buf)
 	decoder := gob.NewDecoder(r)
@@ -80,6 +82,7 @@ func (g *Graph) GobDecode(buf []byte) error {
 	return nil
 }
 
+// GobEncode satisfies the gob encoder interface
 func (n *Node) GobEncode() ([]byte, error) {
 	n.Lock()
 	defer n.Unlock()
@@ -119,6 +122,7 @@ func (n *Node) GobEncode() ([]byte, error) {
 	return w.Bytes(), nil
 }
 
+// GobDecode satisfies the gob encoder interface
 func (n *Node) GobDecode(buf []byte) error {
 	r := bytes.NewBuffer(buf)
 	decoder := gob.NewDecoder(r)

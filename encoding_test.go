@@ -32,7 +32,7 @@ func TestEncodeDecode(t *testing.T) {
 	}
 
 	if len(g.Nodes[10].sources) != 1 {
-		t.Errorf("node source restoration failed. Len of node 10 sources: %d")
+		t.Errorf("node source restoration failed. Len of node 10 sources: %d", len(g.Nodes[10].sources))
 	}
 
 	if g.Nodes[10].sources[0].ID != uint64(6) {
