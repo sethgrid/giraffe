@@ -63,8 +63,9 @@ func curriculumGraph() {
 	ioutil.WriteFile("someFile", data, 0766)
 
 	// load
+	restoredData, _ := ioutil.ReadFile("someFile")
 	restoredGraph := &giraffe.Graph{}
-	restoredGraph.GobDecode(data)
+	restoredGraph.GobDecode(restoredData)
 
 	// visualize
 	fmt.Println(restoredGraph.ToVisJS(false, true, false))
